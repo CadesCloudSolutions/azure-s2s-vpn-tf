@@ -381,7 +381,7 @@ resource "azurerm_network_security_rule" "avd_outbound_to_hub" {
   priority                    = 110
   direction                   = "Outbound"
   access                      = "Allow"
-  protocol                    = "TCP"
+  protocol                    = "*"
   source_port_range           = "*"
   destination_port_range      = "*"
   source_address_prefix       = "10.125.0.0/24"
