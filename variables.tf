@@ -105,3 +105,21 @@ variable "ctx_nsg_name" {
   description = "NSG name for Citrix subnet"
   default     = "ctx-nsg"
 }
+
+# The subscription_id variable is used to specify the Azure Subscription ID where all resources will be provisioned.
+variable "subscription_id" {
+  description = "Azure Subscription ID used for deploying all resources in this Terraform configuration"
+  type        = string
+}
+
+variable "vm_admin_username" {
+  description = "Admin username for all VMs"
+  type        = string
+  default     = "azureuser"
+}
+
+variable "vm_admin_password" {
+  description = "Admin password for all VMs"
+  type        = string
+  sensitive   = true
+}

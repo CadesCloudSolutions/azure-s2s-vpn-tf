@@ -1,7 +1,7 @@
 # Configure the Azure provider
 provider "azurerm" {
   features {}
-  subscription_id = "ca68cbec-99cc-42c8-a129-c57175550042"
+  subscription_id = var.subscription_id
 }
 
 # Resource Group for all resources
@@ -176,8 +176,8 @@ resource "azurerm_windows_virtual_machine" "hubvm" {
   location            = azurerm_resource_group.hub.location
   resource_group_name = azurerm_resource_group.hub.name
   size                = "Standard_B1s"
-  admin_username      = "azureuser"
-  admin_password      = "Mypassword01"
+  admin_username      = var.vm_admin_username
+  admin_password      = var.vm_admin_password
   network_interface_ids = [
     azurerm_network_interface.hubvm_nic.id
   ]
@@ -420,8 +420,8 @@ resource "azurerm_windows_virtual_machine" "avd_vm" {
   location            = azurerm_resource_group.spoke1_avd_rg.location
   resource_group_name = azurerm_resource_group.spoke1_avd_rg.name
   size                = "Standard_B1s"
-  admin_username      = "azureuser"
-  admin_password      = "Mypassword01"
+  admin_username      = var.vm_admin_username
+  admin_password      = var.vm_admin_password
   network_interface_ids = [
     azurerm_network_interface.avd_vm_nic.id
   ]
@@ -509,8 +509,8 @@ resource "azurerm_windows_virtual_machine" "ctx_vm" {
   location            = azurerm_resource_group.spoke2_ctx_rg.location
   resource_group_name = azurerm_resource_group.spoke2_ctx_rg.name
   size                = "Standard_B1s"
-  admin_username      = "azureuser"
-  admin_password      = "Mypassword01"
+  admin_username      = var.vm_admin_username
+  admin_password      = var.vm_admin_password
   network_interface_ids = [
     azurerm_network_interface.ctx_vm_nic.id
   ]
