@@ -123,3 +123,18 @@ variable "vm_admin_password" {
   type        = string
   sensitive   = true
 }
+
+variable "spoke1_rt_name" {
+  description = "Route table name for Spoke 1 (AVD)"
+  default     = "spoke1-rt"
+}
+
+variable "spoke2_rt_name" {
+  description = "Route table name for Spoke 2 (CTX)"
+  default     = "spoke2-rt"
+}
+
+variable "firewall_private_ip" {
+  description = "The private IP address of the Azure Firewall"
+  type        = string
+}
