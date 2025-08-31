@@ -367,7 +367,7 @@ resource "azurerm_network_security_rule" "avd_rdp_rule" {
   priority                    = 100
   direction                   = "Inbound"
   access                      = "Allow"
-  protocol                    = "Tcp"
+  protocol                    = "*"
   source_port_range           = "*"
   destination_port_range      = "3389"
   source_address_prefix       = "*"
@@ -471,7 +471,7 @@ resource "azurerm_network_security_rule" "ctx_rdp_rule" {
   priority                    = 100
   direction                   = "Inbound"
   access                      = "Allow"
-  protocol                    = "Tcp"
+  protocol                    = "*"
   source_port_range           = "*"
   destination_port_range      = "3389"
   source_address_prefix       = "*"
@@ -532,5 +532,124 @@ resource "azurerm_windows_virtual_machine" "ctx_vm" {
     environment = "spoke2"
   }
 }
+
+# Azure firewall public IP
+resource "azurerm_public_ip" "firewall_pip" {
+  name                = "FW-PIP"
+  location            = azurerm_resource_group.hub.location
+  resource_group_name = azurerm_resource_group.hub.name
+  allocation_method   = "Static"
+  sku                 = "Standard"
+}
+
+resource "azurerm_firewall" "hub_firewall" {
+  name                = "ccs-firewall-prd"
+  location            = azurerm_resource_group.hub.location
+  resource_group_name = azurerm_resource_group.hub.name
+  sku_name            = "AZFW_VNet"
+  sku_tier            = "Standard"
+
+  firewall_policy_id  = azurerm_firewall_policy.hub_fw_policy.id
+
+  ip_configuration {
+    name                 = "configuration"
+    subnet_id            = azurerm_subnet.hub_firewall_subnet.id
+    public_ip_address_id = azurerm_public_ip.firewall_pip.id
+  }
+
+  depends_on = [
+    azurerm_public_ip.firewall_pip,
+    azurerm_subnet.hub_firewall_subnet,
+    azurerm_firewall_policy.hub_fw_policy
+  ]
+}
+
+# Firewall Policy
+resource "azurerm_firewall_policy" "hub_fw_policy" {
+  name                = "ccs-fw-policy1"
+  resource_group_name = azurerm_resource_group.hub.name
+  location            = azurerm_resource_group.hub.location
+}
+
+# Associate Firewall Policy with Azure Firewall
+resource "azurerm_firewall_policy_rule_collection_group" "hub_fw_policy_group" {
+  name               = "ccs-fw-policy1-group"
+  firewall_policy_id = azurerm_firewall_policy.hub_fw_policy.id
+  priority           = 100
+
+  # Example rule collection (add your rules here)
+  network_rule_collection {
+    name     = "AllowAllOutbound"
+    priority = 100
+    action   = "Allow"
+    rule {
+      name                  = "AllowAll"
+      source_addresses      = ["*"]
+      destination_addresses = ["*"]
+      destination_ports     = ["*"]
+      protocols             = ["Any"]
+    }
+  }
+}
+
+# Route table for Spoke 1 (AVD)
+resource "azurerm_route_table" "spoke1_rt" {
+  name                           = var.spoke1_rt_name
+  location                       = azurerm_resource_group.spoke1_avd_rg.location
+  resource_group_name            = azurerm_resource_group.spoke1_avd_rg.name
+  bgp_route_propagation_enabled  = false  # disables gateway route propagation
+
+  tags = {
+    environment = "spoke1"
+  }
+}
+
+# Associate Spoke 1 route table with the AVD subnet
+resource "azurerm_subnet_route_table_association" "spoke1_subnet_rt" {
+  subnet_id      = azurerm_subnet.avd_subnet.id
+  route_table_id = azurerm_route_table.spoke1_rt.id
+}
+
+# Add a default route in Spoke 1 route table to send all traffic to Azure Firewall
+resource "azurerm_route" "spoke1_default_fw" {
+  name                   = "default-to-fw"
+  resource_group_name    = azurerm_resource_group.spoke1_avd_rg.name
+  route_table_name       = azurerm_route_table.spoke1_rt.name
+  address_prefix         = "0.0.0.0/0"
+  next_hop_type          = "VirtualAppliance"
+  next_hop_in_ip_address = var.firewall_private_ip  # Set in terraform.tfvars
+}
+
+# Route table for Spoke 2 (CTX)
+resource "azurerm_route_table" "spoke2_rt" {
+  name                           = var.spoke2_rt_name
+  location                       = azurerm_resource_group.spoke2_ctx_rg.location
+  resource_group_name            = azurerm_resource_group.spoke2_ctx_rg.name
+  bgp_route_propagation_enabled  = false  # disables gateway route propagation
+
+  tags = {
+    environment = "spoke2"
+  }
+}
+
+# Associate Spoke 2 route table with the CTX subnet
+resource "azurerm_subnet_route_table_association" "spoke2_subnet_rt" {
+  subnet_id      = azurerm_subnet.ctx_subnet.id
+  route_table_id = azurerm_route_table.spoke2_rt.id
+}
+
+# Add a default route in Spoke 2 route table to send all traffic to Azure Firewall
+resource "azurerm_route" "spoke2_default_fw" {
+  name                   = "default-to-fw"
+  resource_group_name    = azurerm_resource_group.spoke2_ctx_rg.name
+  route_table_name       = azurerm_route_table.spoke2_rt.name
+  address_prefix         = "0.0.0.0/0"
+  next_hop_type          = "VirtualAppliance"
+  next_hop_in_ip_address = var.firewall_private_ip  # Set in terraform.tfvars
+}
+
+
+
+
 
 
