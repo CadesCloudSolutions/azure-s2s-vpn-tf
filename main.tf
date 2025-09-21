@@ -18,7 +18,7 @@ resource "azurerm_virtual_network" "hub_vnet" {
   resource_group_name = azurerm_resource_group.hub.name
 }
 
-# Subnet for VPN Gateway
+# Subnet for VPN-Gateway
 resource "azurerm_subnet" "gateway_subnet" {
   name                 = "GatewaySubnet"
   resource_group_name  = azurerm_resource_group.hub.name
