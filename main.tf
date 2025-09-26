@@ -211,8 +211,8 @@ resource "azurerm_local_network_gateway" "onprem_lngw" {
   location            = azurerm_resource_group.hub.location
   resource_group_name = azurerm_resource_group.hub.name
 
-  gateway_address     = "81.97.169.164"         # Public IP of on-prem server
-  address_space       = ["192.168.170.0/24"]      # On-premises address space
+  gateway_address     = var.onprem_public_ip         # Public IP of on-prem server
+  address_space       = [var.onprem_address_space]   # On-premises address space
 
   tags = {
     environment = "hub"
@@ -245,6 +245,32 @@ resource "azurerm_route_table" "hub_rt" {
   tags = {
     environment = "hub"
   }
+}
+
+# Associate hub-rt route table with GatewaySubnet
+resource "azurerm_subnet_route_table_association" "gateway_subnet_rt" {
+  subnet_id      = azurerm_subnet.gateway_subnet.id
+  route_table_id = azurerm_route_table.hub_rt.id
+}
+
+# Route for spoke1 in hub-rt
+resource "azurerm_route" "hub_rt_spoke1_fw" {
+  name                   = "spoke1"
+  resource_group_name    = azurerm_resource_group.hub.name
+  route_table_name       = azurerm_route_table.hub_rt.name
+  address_prefix         = var.spoke1_address_prefix
+  next_hop_type          = "VirtualAppliance"
+  next_hop_in_ip_address = var.firewall_private_ip
+}
+
+# Route for onprem in hub-rt
+resource "azurerm_route" "hub_rt_onprem_fw" {
+  name                   = "onprem"
+  resource_group_name    = azurerm_resource_group.hub.name
+  route_table_name       = azurerm_route_table.hub_rt.name
+  address_prefix         = var.onprem_address_space
+  next_hop_type          = "VirtualAppliance"
+  next_hop_in_ip_address = var.firewall_private_ip
 }
 
 # # UDR for 169.254.0.0/16 to Virtual Network Gateway
@@ -577,20 +603,48 @@ resource "azurerm_firewall_policy_rule_collection_group" "hub_fw_policy_group" {
   firewall_policy_id = azurerm_firewall_policy.hub_fw_policy.id
   priority           = 100
 
-  # Example rule collection (add your rules here)
   network_rule_collection {
-    name     = "AllowAllOutbound"
+    name     = "Allow-Spoke-to-Onprem"
     priority = 100
     action   = "Allow"
     rule {
-      name                  = "AllowAll"
-      source_addresses      = ["*"]
-      destination_addresses = ["*"]
+      name                  = "ctx-spoke-to-onprem"
+      source_addresses      = [var.spoke2_address_prefix]
+      destination_addresses = [var.onprem_address_space]
       destination_ports     = ["*"]
       protocols             = ["Any"]
     }
   }
+
+  network_rule_collection {
+    name     = "Allow-Spoke1-to-Spoke2-Connectivity"
+    priority = 110
+    action   = "Allow"
+    rule {
+      name                  = "spoke1-to-spoke2"
+      source_addresses      = [var.spoke1_address_prefix, var.spoke2_address_prefix, var.onprem_address_space]
+      destination_addresses = [var.spoke2_address_prefix, var.onprem_address_space, var.spoke1_address_prefix]
+      destination_ports     = ["*"]
+      protocols             = ["Any"]
+    }
+  }
+
+  network_rule_collection {
+    name     = "Allow-Spoke2-to-Spoke1-Connectivity"
+    priority = 120
+    action   = "Allow"
+    rule {
+      name                  = "spoke2-to-spoke1"
+      source_addresses      = [var.spoke2_address_prefix]
+      destination_addresses = [var.spoke1_address_prefix]
+      destination_ports     = ["*"]
+      protocols             = ["Any"]
+    }
+  }
+
 }
+
+
 
 # Route table for Spoke 1 (AVD)
 resource "azurerm_route_table" "spoke1_rt" {

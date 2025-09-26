@@ -138,3 +138,23 @@ variable "firewall_private_ip" {
   description = "The private IP address of the Azure Firewall"
   type        = string
 }
+
+variable "onprem_public_ip" {
+  description = "Public IP of on-prem server"
+  type        = string
+}
+
+variable "onprem_address_space" {
+  description = "On-premises address space"
+  type        = string
+}
+
+variable "spoke1_address_prefix" {
+  description = "Address prefix for Spoke 1 subnet"
+  type        = string
+}
+
+variable "spoke2_address_prefix" {
+  description = "Address prefix for Spoke 2 subnet"
+  type        = string
+}
