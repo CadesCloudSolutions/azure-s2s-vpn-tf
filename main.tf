@@ -702,6 +702,34 @@ resource "azurerm_route" "spoke2_default_fw" {
   next_hop_in_ip_address = var.firewall_private_ip  # Set in terraform.tfvars
 }
 
+# Log Analytics Workspace for Firewall logs
+resource "azurerm_log_analytics_workspace" "firewall_logs" {
+  name                = "firewall-logs-workspace"
+  location            = azurerm_resource_group.hub.location
+  resource_group_name = azurerm_resource_group.hub.name
+  sku                 = "PerGB2018"
+  retention_in_days   = 30
+}
+
+# Diagnostic settings for Azure Firewall
+resource "azurerm_monitor_diagnostic_setting" "firewall_diag" {
+  name                       = "firewall-diagnostics"
+  target_resource_id         = azurerm_firewall.hub_firewall.id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.firewall_logs.id
+
+  enabled_log {
+    category = "AzureFirewallApplicationRule"
+  }
+
+  enabled_log {
+    category = "AzureFirewallNetworkRule"
+  }
+
+  enabled_log {
+    category = "AzureFirewallDnsProxy"
+  }
+}
+
 
 
 
