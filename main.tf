@@ -338,7 +338,7 @@ resource "azurerm_virtual_network_peering" "spoke1_to_hub" {
   allow_forwarded_traffic      = true
   use_remote_gateways          = true
 
-  depends_on = [azurerm_virtual_network_gateway.hub_vpn_gateway]
+  depends_on = [azurerm_virtual_network_gateway.vpn_gw]
 }
 
 
@@ -366,7 +366,7 @@ resource "azurerm_virtual_network_peering" "spoke2_to_hub" {
   allow_forwarded_traffic      = true
   use_remote_gateways          = true
 
-  depends_on = [azurerm_virtual_network_gateway.hub_vpn_gateway]
+  depends_on = [azurerm_virtual_network_gateway.vpn_gw]
 }
 
 
