@@ -134,27 +134,26 @@ variable "spoke2_rt_name" {
   default     = "spoke2-rt"
 }
 
-variable "firewall_private_ip" {
-  description = "The private IP address of the Azure Firewall"
-  type        = string
-}
-
 variable "onprem_public_ip" {
   description = "Public IP of on-prem server"
   type        = string
+  default     = "81.97.169.164"
 }
 
 variable "onprem_address_space" {
   description = "On-premises address space"
   type        = string
+  default     = "192.168.170.0/24"
 }
 
 variable "spoke1_address_prefix" {
   description = "Address prefix for Spoke 1 subnet"
   type        = string
+  default     = "10.125.0.0/24"
 }
 
 variable "spoke2_address_prefix" {
   description = "Address prefix for Spoke 2 subnet"
   type        = string
+  default     = "10.145.0.0/24"
 }

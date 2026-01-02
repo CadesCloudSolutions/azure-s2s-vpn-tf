@@ -260,7 +260,7 @@ resource "azurerm_route" "hub_rt_spoke1_fw" {
   route_table_name       = azurerm_route_table.hub_rt.name
   address_prefix         = var.spoke1_address_prefix
   next_hop_type          = "VirtualAppliance"
-  next_hop_in_ip_address = var.firewall_private_ip
+  next_hop_in_ip_address = azurerm_firewall.hub_firewall.ip_configuration[0].private_ip_address
 }
 
 # Route for onprem in hub-rt
@@ -270,7 +270,7 @@ resource "azurerm_route" "hub_rt_onprem_fw" {
   route_table_name       = azurerm_route_table.hub_rt.name
   address_prefix         = var.onprem_address_space
   next_hop_type          = "VirtualAppliance"
-  next_hop_in_ip_address = var.firewall_private_ip
+  next_hop_in_ip_address = azurerm_firewall.hub_firewall.ip_configuration[0].private_ip_address
 }
 
 # # UDR for 169.254.0.0/16 to Virtual Network Gateway
@@ -671,7 +671,7 @@ resource "azurerm_route" "spoke1_default_fw" {
   route_table_name       = azurerm_route_table.spoke1_rt.name
   address_prefix         = "0.0.0.0/0"
   next_hop_type          = "VirtualAppliance"
-  next_hop_in_ip_address = var.firewall_private_ip  # Set in terraform.tfvars
+  next_hop_in_ip_address = azurerm_firewall.hub_firewall.ip_configuration[0].private_ip_address
 }
 
 # Route table for Spoke 2 (CTX)
@@ -699,7 +699,7 @@ resource "azurerm_route" "spoke2_default_fw" {
   route_table_name       = azurerm_route_table.spoke2_rt.name
   address_prefix         = "0.0.0.0/0"
   next_hop_type          = "VirtualAppliance"
-  next_hop_in_ip_address = var.firewall_private_ip  # Set in terraform.tfvars
+  next_hop_in_ip_address = azurerm_firewall.hub_firewall.ip_configuration[0].private_ip_address
 }
 
 # Log Analytics Workspace for Firewall logs
