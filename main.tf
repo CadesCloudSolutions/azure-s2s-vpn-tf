@@ -62,6 +62,7 @@ resource "azurerm_public_ip" "vpn_gw_pip" {
   resource_group_name = azurerm_resource_group.hub.name
   allocation_method   = "Static"
   sku                 = "Standard"
+  zones               = ["1", "2", "3"] # zone-redundant, required for AZ gateway SKUs
 }
 
 # VPN Gateway resource
@@ -71,7 +72,7 @@ resource "azurerm_virtual_network_gateway" "vpn_gw" {
   resource_group_name = azurerm_resource_group.hub.name
   type                = "Vpn"
   vpn_type            = "RouteBased"
-  sku                 = "VpnGw1"
+  sku                 = "VpnGw1AZ" # non-AZ VpnGw1-5 SKUs can no longer be created
   enable_bgp          = false
   active_active       = false
 
