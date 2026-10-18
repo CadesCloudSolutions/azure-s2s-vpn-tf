@@ -184,9 +184,9 @@ resource "azurerm_windows_virtual_machine" "hubvm" {
   ]
 
   os_disk {
-    name                  = "hubvm-osdisk"
-    caching               = "ReadWrite"
-    storage_account_type  = "Premium_LRS"
+    name                 = "hubvm-osdisk"
+    caching              = "ReadWrite"
+    storage_account_type = "Premium_LRS"
   }
 
   # Enable boot diagnostics using the storage account above
@@ -212,8 +212,8 @@ resource "azurerm_local_network_gateway" "onprem_lngw" {
   location            = azurerm_resource_group.hub.location
   resource_group_name = azurerm_resource_group.hub.name
 
-  gateway_address     = var.onprem_public_ip         # Public IP of on-prem server
-  address_space       = [var.onprem_address_space]   # On-premises address space
+  gateway_address = var.onprem_public_ip       # Public IP of on-prem server
+  address_space   = [var.onprem_address_space] # On-premises address space
 
   tags = {
     environment = "hub"
@@ -221,16 +221,16 @@ resource "azurerm_local_network_gateway" "onprem_lngw" {
 }
 
 resource "azurerm_virtual_network_gateway_connection" "vppn_local" {
-  name                       = "vppn-local"
-  location                   = azurerm_resource_group.hub.location
-  resource_group_name        = azurerm_resource_group.hub.name
+  name                = "vppn-local"
+  location            = azurerm_resource_group.hub.location
+  resource_group_name = azurerm_resource_group.hub.name
 
   virtual_network_gateway_id = azurerm_virtual_network_gateway.vpn_gw.id
   local_network_gateway_id   = azurerm_local_network_gateway.onprem_lngw.id
 
-  type                       = "IPsec"
-  shared_key                 = var.vpn_shared_key
-  enable_bgp                 = false
+  type       = "IPsec"
+  shared_key = var.vpn_shared_key
+  enable_bgp = false
 
   tags = {
     environment = "hub"
@@ -263,6 +263,18 @@ resource "azurerm_route" "hub_rt_spoke1_fw" {
   next_hop_type          = "VirtualAppliance"
   next_hop_in_ip_address = azurerm_firewall.hub_firewall.ip_configuration[0].private_ip_address
 }
+
+# route for spoke2 in hub-rt
+resource "azurerm_route" "hub_rt_spoke2_fw" {
+  name                   = "spoke2"
+  resource_group_name    = azurerm_resource_group.hub.name
+  route_table_name       = azurerm_route_table.hub_rt.name
+  address_prefix         = var.spoke2_address_prefix
+  next_hop_type          = "VirtualAppliance"
+  next_hop_in_ip_address = azurerm_firewall.hub_firewall.ip_configuration[0].private_ip_address
+}
+
+
 
 # Route for onprem in hub-rt
 resource "azurerm_route" "hub_rt_onprem_fw" {
@@ -458,9 +470,9 @@ resource "azurerm_windows_virtual_machine" "avd_vm" {
   ]
 
   os_disk {
-    name                  = "${var.avd_vm_name}-osdisk"
-    caching               = "ReadWrite"
-    storage_account_type  = "Premium_LRS"
+    name                 = "${var.avd_vm_name}-osdisk"
+    caching              = "ReadWrite"
+    storage_account_type = "Premium_LRS"
   }
 
   source_image_reference {
@@ -547,9 +559,9 @@ resource "azurerm_windows_virtual_machine" "ctx_vm" {
   ]
 
   os_disk {
-    name                  = "${var.ctx_vm_name}-osdisk"
-    caching               = "ReadWrite"
-    storage_account_type  = "Premium_LRS"
+    name                 = "${var.ctx_vm_name}-osdisk"
+    caching              = "ReadWrite"
+    storage_account_type = "Premium_LRS"
   }
 
   source_image_reference {
@@ -580,7 +592,7 @@ resource "azurerm_firewall" "hub_firewall" {
   sku_name            = "AZFW_VNet"
   sku_tier            = "Standard"
 
-  firewall_policy_id  = azurerm_firewall_policy.hub_fw_policy.id
+  firewall_policy_id = azurerm_firewall_policy.hub_fw_policy.id
 
   ip_configuration {
     name                 = "configuration"
@@ -653,10 +665,10 @@ resource "azurerm_firewall_policy_rule_collection_group" "hub_fw_policy_group" {
 
 # Route table for Spoke 1 (AVD)
 resource "azurerm_route_table" "spoke1_rt" {
-  name                           = var.spoke1_rt_name
-  location                       = azurerm_resource_group.spoke1_avd_rg.location
-  resource_group_name            = azurerm_resource_group.spoke1_avd_rg.name
-  bgp_route_propagation_enabled  = false  # disables gateway route propagation
+  name                          = var.spoke1_rt_name
+  location                      = azurerm_resource_group.spoke1_avd_rg.location
+  resource_group_name           = azurerm_resource_group.spoke1_avd_rg.name
+  bgp_route_propagation_enabled = false # disables gateway route propagation
 
   tags = {
     environment = "spoke1"
@@ -681,10 +693,10 @@ resource "azurerm_route" "spoke1_default_fw" {
 
 # Route table for Spoke 2 (CTX)
 resource "azurerm_route_table" "spoke2_rt" {
-  name                           = var.spoke2_rt_name
-  location                       = azurerm_resource_group.spoke2_ctx_rg.location
-  resource_group_name            = azurerm_resource_group.spoke2_ctx_rg.name
-  bgp_route_propagation_enabled  = false  # disables gateway route propagation
+  name                          = var.spoke2_rt_name
+  location                      = azurerm_resource_group.spoke2_ctx_rg.location
+  resource_group_name           = azurerm_resource_group.spoke2_ctx_rg.name
+  bgp_route_propagation_enabled = false # disables gateway route propagation
 
   tags = {
     environment = "spoke2"
