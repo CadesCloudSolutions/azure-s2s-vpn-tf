@@ -621,7 +621,7 @@ resource "azurerm_firewall_policy_rule_collection_group" "hub_fw_policy_group" {
   priority           = 100
 
   network_rule_collection {
-    name     = "Allow-Spokes-to-Onprem"
+    name     = "Allow-Spokes-Onprem"
     priority = 100
     action   = "Allow"
     rule {
