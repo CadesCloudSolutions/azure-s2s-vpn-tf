@@ -621,43 +621,39 @@ resource "azurerm_firewall_policy_rule_collection_group" "hub_fw_policy_group" {
   priority           = 100
 
   network_rule_collection {
-    name     = "Allow-Spoke-to-Onprem"
+    name     = "Allow-Spokes-to-Onprem"
     priority = 100
     action   = "Allow"
     rule {
-      name                  = "ctx-spoke-to-onprem"
-      source_addresses      = [var.spoke2_address_prefix]
+      name                  = "spokes-to-onprem"
+      source_addresses      = [var.spoke1_address_prefix, var.spoke2_address_prefix]
       destination_addresses = [var.onprem_address_space]
       destination_ports     = ["*"]
       protocols             = ["Any"]
     }
+    rule {
+      name                  = "onprem-to-spokes"
+      source_addresses      = [var.onprem_address_space]
+      destination_addresses = [var.spoke1_address_prefix, var.spoke2_address_prefix]
+      destination_ports     = ["*"]
+      protocols             = ["Any"]
+    }
+
   }
 
   network_rule_collection {
-    name     = "Allow-Spoke1-to-Spoke2-Connectivity"
+    name     = "Allow-Spoke-to-Spoke-Connectivity"
     priority = 110
     action   = "Allow"
     rule {
       name                  = "spoke1-to-spoke2"
-      source_addresses      = [var.spoke1_address_prefix, var.spoke2_address_prefix, var.onprem_address_space]
-      destination_addresses = [var.spoke2_address_prefix, var.onprem_address_space, var.spoke1_address_prefix]
+      source_addresses      = [var.spoke1_address_prefix, var.spoke2_address_prefix]
+      destination_addresses = [var.spoke1_address_prefix, var.spoke2_address_prefix]
       destination_ports     = ["*"]
       protocols             = ["Any"]
     }
   }
 
-  network_rule_collection {
-    name     = "Allow-Spoke2-to-Spoke1-Connectivity"
-    priority = 120
-    action   = "Allow"
-    rule {
-      name                  = "spoke2-to-spoke1"
-      source_addresses      = [var.spoke2_address_prefix]
-      destination_addresses = [var.spoke1_address_prefix]
-      destination_ports     = ["*"]
-      protocols             = ["Any"]
-    }
-  }
 
 }
 
